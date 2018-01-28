@@ -5,13 +5,17 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.BackgroundCallback;
 import org.apache.curator.framework.api.CuratorEvent;
+import org.apache.curator.framework.recipes.atomic.AtomicValue;
+import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListener;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.aop.ThrowsAdvice;
@@ -19,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +40,7 @@ public class ZookeeperRegistryService {
 
     private CuratorFramework client;
 
+    // 同步创建节点并赋值
     //@Scheduled(cron = "${scheduled.cron}")
     public void CuratorCreateNode() throws Exception{
         client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
@@ -66,6 +73,7 @@ public class ZookeeperRegistryService {
     private CountDownLatch semaphore = new CountDownLatch(2);
     private ExecutorService tp = Executors.newFixedThreadPool(2);
 
+    // 异步创建节点
     //@Scheduled(cron = "${scheduled.cron}")
     public void asyncCuratorCreateNode() throws Exception{
         client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
@@ -104,6 +112,7 @@ public class ZookeeperRegistryService {
         tp.shutdown();
     }
 
+    // 时间监听   只是对子节点的数据变化进行监听
     //@Scheduled(cron = "${scheduled.cron}")
     public void addListenerChange() throws Exception{
         client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
@@ -148,7 +157,8 @@ public class ZookeeperRegistryService {
     }
 
 
-    @Scheduled(cron = "${scheduled.cron}")
+    // Master选举
+    //@Scheduled(cron = "${scheduled.cron}")
     public void leaderMaster() throws Exception{
         client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
                 zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
@@ -173,5 +183,55 @@ public class ZookeeperRegistryService {
         selector.start();
 
         Thread.sleep(1000);
+    }
+
+
+    // 分布式锁
+    //@Scheduled(cron = "${scheduled.cron}")
+    public void zookeeperMutexLock(){
+        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
+                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
+        client.start();
+
+        final InterProcessMutex lock = new InterProcessMutex(client, zookeeperConfig.getPath());
+        for (int i = 0; i < 30; i++){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        semaphore.await();
+                        lock.acquire();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss|SSS");
+                    String orderNum = sdf.format(new Date());
+                    System.out.println("生成的订单号是: " + orderNum);
+
+                    try {
+                        lock.release();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+
+        semaphore.countDown();
+    }
+
+    @Scheduled(cron = "${scheduled.cron}")
+    public void distributedCount() throws Exception{
+        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
+                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
+        client.start();
+
+        DistributedAtomicInteger atomicInteger = new DistributedAtomicInteger(client,
+                zookeeperConfig.getPath(), new RetryNTimes(3, 1000));
+
+        AtomicValue<Integer> rc = atomicInteger.add(8);
+
+        System.out.println("Result : " + rc.succeeded());
     }
 }
