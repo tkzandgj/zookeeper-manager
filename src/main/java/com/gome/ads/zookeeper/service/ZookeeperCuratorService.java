@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
@@ -41,14 +42,19 @@ public class ZookeeperCuratorService {
 
     private CuratorFramework client;
 
-    // 同步创建节点并赋值
-    //@Scheduled(cron = "${scheduled.cron}")
-    public void CuratorCreateNode() throws Exception{
+    @PostConstruct
+    public void init(){
         client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
                 zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
 
         client.start();
+    }
 
+
+
+    // 同步创建节点并赋值
+    //@Scheduled(cron = "${scheduled.cron}")
+    public void CuratorCreateNode() throws Exception{
         // 创建节点（若父节点不存在的话先创建父节点）
         client.create()
                 .creatingParentsIfNeeded()
@@ -77,9 +83,6 @@ public class ZookeeperCuratorService {
     // 异步创建节点
     //@Scheduled(cron = "${scheduled.cron}")
     public void asyncCuratorCreateNode() throws Exception{
-        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
-                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
-        client.start();
 
         // 异步创建节点  单独开启线程池去处理创建节点的操作
         client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)
@@ -116,9 +119,6 @@ public class ZookeeperCuratorService {
     // 时间监听   只是对子节点的数据变化进行监听
     //@Scheduled(cron = "${scheduled.cron}")
     public void addListenerChange() throws Exception{
-        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
-                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
-        client.start();
 
         PathChildrenCache cache = new PathChildrenCache(client, zookeeperConfig.getPath(), true);
         cache.start(PathChildrenCache.StartMode.POST_INITIALIZED_EVENT);
@@ -161,10 +161,6 @@ public class ZookeeperCuratorService {
     // Master选举
     //@Scheduled(cron = "${scheduled.cron}")
     public void leaderMaster() throws Exception{
-        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
-                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
-        client.start();
-
         LeaderSelector selector = new LeaderSelector(client, zookeeperConfig.getPath(), new LeaderSelectorListener() {
             @Override
             public void takeLeadership(CuratorFramework curatorFramework) throws Exception {
@@ -190,10 +186,6 @@ public class ZookeeperCuratorService {
     // 分布式锁
     //@Scheduled(cron = "${scheduled.cron}")
     public void zookeeperMutexLock(){
-        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
-                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
-        client.start();
-
         final InterProcessMutex lock = new InterProcessMutex(client, zookeeperConfig.getPath());
         for (int i = 0; i < 30; i++){
             new Thread(new Runnable() {
@@ -224,9 +216,6 @@ public class ZookeeperCuratorService {
 
     @Scheduled(cron = "${scheduled.cron}")
     public void distributedCount() throws Exception{
-        client = CuratorFrameworkFactory.newClient(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts(),
-                zookeeperConfig.getConnectionTimeouts(), new ExponentialBackoffRetry(1000, 3));
-        client.start();
 
         DistributedAtomicInteger atomicInteger = new DistributedAtomicInteger(client,
                 zookeeperConfig.getPath(), new RetryNTimes(3, 1000));
