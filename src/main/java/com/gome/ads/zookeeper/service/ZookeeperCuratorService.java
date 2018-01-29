@@ -31,9 +31,10 @@ import java.util.concurrent.Executors;
 
 /**
  * @author Administrator
+ * zookeeper的curator客户端测试
  */
 @Component
-public class ZookeeperRegistryService {
+public class ZookeeperCuratorService {
 
     @Autowired
     private ZookeeperConfig zookeeperConfig;
