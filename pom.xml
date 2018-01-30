@@ -26,6 +26,7 @@
     <httpmime.version>4.5.2</httpmime.version>
     <lombok.version>1.16.10</lombok.version>
     <kafka-clients.version>0.9.0.1</kafka-clients.version>
+    <netty-all.version>4.1.10.Final</netty-all.version>
   </properties>
 
   <dependencies>
@@ -95,6 +96,13 @@
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
       <version>${kafka-clients.version}</version>
+    </dependency>
+
+    <!-- netty -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>${netty-all.version}</version>
     </dependency>
   </dependencies>
 
