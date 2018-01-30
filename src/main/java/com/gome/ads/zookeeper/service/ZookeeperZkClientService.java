@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -23,16 +24,22 @@ public class ZookeeperZkClientService {
     @Autowired
     private ZookeeperConfig zookeeperConfig;
 
+    private ZkClient zkClient;
+
+    @PostConstruct
+    public void init(){
+        zkClient = new ZkClient(new ZkConnection(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts()));
+    }
+
+
     //@Scheduled(cron = "${scheduled.cron}")
     private void testChildChanges() throws InterruptedException{
-        ZkClient zkClient = new ZkClient(new ZkConnection(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts()));
-
         zkClient.subscribeChildChanges(zookeeperConfig.getPath(), new IZkChildListener(){
             @Override
             public void handleChildChange(String s, List<String> list) throws Exception {
-                System.out.println("发送改变的节点路径为：" + s);
+                logger.info("发送改变的节点路径为：" + s);
                 for (String str : list){
-                    System.out.println("发送改变的节点为：" + str);
+                    logger.info("发送改变的节点为：" + str);
                 }
             }
         });
@@ -47,17 +54,15 @@ public class ZookeeperZkClientService {
 
     //@Scheduled(cron = "${scheduled.cron}")
     private void testDataChanges() throws InterruptedException{
-        ZkClient zkClient = new ZkClient(new ZkConnection(zookeeperConfig.getAddress(), zookeeperConfig.getSessionTimeouts()));
-
         zkClient.subscribeDataChanges(zookeeperConfig.getPath(), new IZkDataListener() {
             @Override
             public void handleDataChange(String s, Object o) throws Exception {
-                System.out.println("发生数据变化的节点路径为：" + s + ", 变化的数据为：" + o);
+                logger.info("发生数据变化的节点路径为：" + s + ", 变化的数据为：" + o);
             }
 
             @Override
             public void handleDataDeleted(String s) throws Exception {
-                System.out.println("发送数据删除的节点的路径为：" + s);
+                logger.info("发送数据删除的节点的路径为：" + s);
             }
         });
 
