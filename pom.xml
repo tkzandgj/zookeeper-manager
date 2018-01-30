@@ -24,6 +24,8 @@
     <curator-recipes.version>2.4.2</curator-recipes.version>
     <httpclient.version>4.5.2</httpclient.version>
     <httpmime.version>4.5.2</httpmime.version>
+    <lombok.version>1.16.10</lombok.version>
+    <kafka-clients.version>0.9.0.1</kafka-clients.version>
   </properties>
 
   <dependencies>
@@ -81,6 +83,19 @@
       <version>${httpmime.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- kafka -->
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${kafka-clients.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
