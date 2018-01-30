@@ -1,5 +1,6 @@
 package com.gome.ads.zookeeper.bean;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "zookeeper")
+@Data
 public class ZookeeperConfig {
 
     private String address;
@@ -19,45 +21,4 @@ public class ZookeeperConfig {
 
     private String path;
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public Integer getSessionTimeouts() {
-        return sessionTimeouts;
-    }
-
-    public void setSessionTimeouts(Integer sessionTimeouts) {
-        this.sessionTimeouts = sessionTimeouts;
-    }
-
-    public Integer getConnectionTimeouts() {
-        return connectionTimeouts;
-    }
-
-    public void setConnectionTimeouts(Integer connectionTimeouts) {
-        this.connectionTimeouts = connectionTimeouts;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    @Override
-    public String toString() {
-        return "ZookeeperConfig{" +
-                "address='" + address + '\'' +
-                ", sessionTimeouts=" + sessionTimeouts +
-                ", connectionTimeouts=" + connectionTimeouts +
-                ", path='" + path + '\'' +
-                '}';
-    }
 }
