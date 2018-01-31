@@ -1,3 +1,9 @@
+server:
+    port: 8080
+    bossGroupCount: 0
+    workGroupCount: 0
+
+
 zookeeper:
     address: 127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183
     sessionTimeouts: 5000
@@ -7,3 +13,8 @@ zookeeper:
 
 scheduled:
   cron: 0/10 * * * * ?
+
+
+kafka:
+    servers: 127.0.0.1:9091,127.0.0.1:9092,127.0.0.1:9093
+    topic: test

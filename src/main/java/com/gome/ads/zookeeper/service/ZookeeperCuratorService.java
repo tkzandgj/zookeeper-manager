@@ -18,6 +18,8 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.ThrowsAdvice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,6 +38,8 @@ import java.util.concurrent.Executors;
  */
 @Component
 public class ZookeeperCuratorService {
+
+    private static Logger logger = LoggerFactory.getLogger(ZookeeperCuratorService.class);
 
     @Autowired
     private ZookeeperConfig zookeeperConfig;
@@ -65,7 +69,7 @@ public class ZookeeperCuratorService {
         Stat stat = new Stat();
         // 获取节点内容
         byte[] data = client.getData().storingStatIn(stat).forPath(zookeeperConfig.getPath());
-        System.out.println("node content is : " + new String(data));
+        logger.info("node content is : " + new String(data));
 
         // 删除节点  guaranteed()保证Curator在后台持续进行删除操作 直到节点删除成功
         client.delete().guaranteed().deletingChildrenIfNeeded()
@@ -89,10 +93,10 @@ public class ZookeeperCuratorService {
                 .inBackground(new BackgroundCallback() {
                     @Override
                     public void processResult(CuratorFramework curatorFramework, CuratorEvent curatorEvent) throws Exception {
-                        System.out.println("event[code:" + curatorEvent.getResultCode()
+                        logger.info("event[code:" + curatorEvent.getResultCode()
                                 + ", type: " + curatorEvent.getType() + "]");
 
-                        System.out.println("Thread of processResult: " + Thread.currentThread().getName());
+                        logger.info("Thread of processResult: " + Thread.currentThread().getName());
 
                         semaphore.countDown();
                     }
@@ -103,10 +107,10 @@ public class ZookeeperCuratorService {
                 .inBackground(new BackgroundCallback() {
                     @Override
                     public void processResult(CuratorFramework curatorFramework, CuratorEvent curatorEvent) throws Exception {
-                        System.out.println("event[code:" + curatorEvent.getResultCode()
+                        logger.info("event[code:" + curatorEvent.getResultCode()
                                 + ", type: " + curatorEvent.getType() + "]");
 
-                        System.out.println("Thread of processResult: " + Thread.currentThread().getName());
+                        logger.info("Thread of processResult: " + Thread.currentThread().getName());
 
                         semaphore.countDown();
                     }
@@ -129,13 +133,13 @@ public class ZookeeperCuratorService {
             public void childEvent(CuratorFramework curator, PathChildrenCacheEvent event) throws Exception {
                 switch (event.getType()){
                     case CHILD_ADDED:
-                        System.out.println("CHILD_ADDED, " + event.getData().getPath());
+                        logger.info("CHILD_ADDED, " + event.getData().getPath());
                         break;
                     case CHILD_UPDATED:
-                        System.out.println("CHILD_UPDATED, " + event.getData().getPath());
+                        logger.info("CHILD_UPDATED, " + event.getData().getPath());
                         break;
                     case CHILD_REMOVED:
-                        System.out.println("CHILD_REMOVED, " + event.getData().getPath());
+                        logger.info("CHILD_REMOVED, " + event.getData().getPath());
                         break;
                     default:
                         break;
@@ -164,10 +168,10 @@ public class ZookeeperCuratorService {
         LeaderSelector selector = new LeaderSelector(client, zookeeperConfig.getPath(), new LeaderSelectorListener() {
             @Override
             public void takeLeadership(CuratorFramework curatorFramework) throws Exception {
-                System.out.println("成为Master角色");
+                logger.info("成为Master角色");
                 Thread.sleep(1000);
 
-                System.out.println("完成Master角色, 释放Master权利");
+                logger.info("完成Master角色, 释放Master权利");
             }
 
             @Override
@@ -200,7 +204,7 @@ public class ZookeeperCuratorService {
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss|SSS");
                     String orderNum = sdf.format(new Date());
-                    System.out.println("生成的订单号是: " + orderNum);
+                    logger.info("生成的订单号是: " + orderNum);
 
                     try {
                         lock.release();
@@ -222,6 +226,6 @@ public class ZookeeperCuratorService {
 
         AtomicValue<Integer> rc = atomicInteger.add(8);
 
-        System.out.println("Result : " + rc.succeeded());
+        logger.info("Result : " + rc.succeeded());
     }
 }

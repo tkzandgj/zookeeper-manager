@@ -6,19 +6,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author Administrator
- * zookeeper的配置
  */
 @Component
-@ConfigurationProperties(prefix = "zookeeper")
+@ConfigurationProperties(prefix = "kafka")
 @Data
-public class ZookeeperConfig {
+public class KafkaConfig {
 
-    private String address;
+    private String servers;
 
-    private Integer sessionTimeouts;
-
-    private Integer connectionTimeouts;
-
-    private String path;
+    private String topic;
 
 }

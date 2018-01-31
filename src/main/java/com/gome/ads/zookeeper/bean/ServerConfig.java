@@ -6,19 +6,16 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author Administrator
- * zookeeper的配置
  */
 @Component
-@ConfigurationProperties(prefix = "zookeeper")
+@ConfigurationProperties(prefix = "server")
 @Data
-public class ZookeeperConfig {
+public class ServerConfig {
 
-    private String address;
+    private Integer port;
 
-    private Integer sessionTimeouts;
+    private String bossGroupCount;
 
-    private Integer connectionTimeouts;
-
-    private String path;
+    private String workGroupCount;
 
 }
