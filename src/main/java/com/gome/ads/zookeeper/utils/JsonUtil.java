@@ -1,4 +1,4 @@
-package com.gome.ad.utils;
+package com.gome.ads.zookeeper.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
